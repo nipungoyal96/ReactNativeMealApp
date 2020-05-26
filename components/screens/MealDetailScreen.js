@@ -1,22 +1,97 @@
-import React from 'react';
-import {View,Text,StyleSheet} from 'react-native';
+import React, { useEffect,useCallback } from 'react';
+import {ScrollView,Image,View,Text,StyleSheet} from 'react-native';
+import {HeaderButtons,Item} from 'react-navigation-header-buttons';
+import CustomHeaderButton from '../HeaderButton';
+import TextInput from '../TextInput';
+
+import {useSelector,useDispatch} from 'react-redux';
+import { toggleFavorite } from '../../store/actions/meals';
+
+
+const ListItem = props =>{
+    return <View style={styles.listItem}>
+        <TextInput>{props.children}</TextInput>
+    </View>
+}
 
 const MealDetailScreen = props =>{
+    const mealId= props.navigation.getParam('mealId');
+    const currentMealIsFav = useSelector(state => state.meals.favoriteMeals.some( meal => meal.id=== mealId))
+    const availableMeals=useSelector(state=>state.meals.meals)
+
+    const dispatch = useDispatch();
+
+    const toggleFavoriteHandler = useCallback(() =>{dispatch(toggleFavorite(mealId))},[dispatch,mealId]);
+
+    useEffect(()=>{
+        props.navigation.setParams({toggleFav : toggleFavoriteHandler})
+    },[toggleFavoriteHandler])
+
+    useEffect(()=>{
+        props.navigation.setParams({isFav: currentMealIsFav})
+    },[currentMealIsFav])
+
+    const selectedMeal = availableMeals.find(meal=> meal.id === mealId)
     return(
-        <View style={styles.screen}>
-            <Text>
-                The meal detail Screen!
-            </Text>
-        </View>
+    <ScrollView>
+            <Image source={{uri:selectedMeal.imageUrl}}  style={styles.image}/>
+            <View style={styles.details}>
+        <TextInput>
+            {selectedMeal.duration}m
+        </TextInput>
+        <TextInput>{selectedMeal.complexity}</TextInput>
+        <TextInput>{selectedMeal.affordability}</TextInput>
+    </View>
+    <Text style={styles.title}>Ingredients</Text>
+    {selectedMeal.ingredients.map(ingredient =>
+        <ListItem key={ingredient}>{ingredient}</ListItem>
+    )}
+  
+    <Text style={styles.title}>Steps</Text>
+    {selectedMeal.steps.map(step =>
+        <ListItem key={step}>{step}</ListItem>
+    )}
+  
+    </ScrollView>
     )
 }
 
-const styles = StyleSheet.create({
-    screen:{
-        flex:1,
-        justifyContent:'center',
-        alignItems:'center'
+
+MealDetailScreen.navigationOptions = navigationData =>{
+    // const mealId= navigationData.navigation.getParam('mealId');
+    const toggleFavorite = navigationData.navigation.getParam('toggleFav');
+    const mealTitle = navigationData.navigation.getParam('mealTitle');
+    const isFavorite =navigationData.navigation.getParam('isFav')
+    return{
+        headerTitle: mealTitle,
+        headerRight: <HeaderButtons HeaderButtonComponent={CustomHeaderButton}>
+            <Item title="favorite" iconName={isFavorite?'ios-star' : 'ios-star-outline'} onPress={toggleFavorite}/>
+        </HeaderButtons>
     }
+
+}
+const styles = StyleSheet.create({
+   image:{
+       width: '100%',
+       height:200
+   },
+   details:{
+       flexDirection:'row',
+       padding:15,
+       justifyContent:'space-around'
+   },
+   title:{
+       fontFamily:'open-sans-bold',
+       fontSize: 22,
+       textAlign: 'center'
+   },
+   listItem:{
+       marginVertical:10,
+    marginHorizontal:20,
+    borderColor:'#ccc',
+    borderWidth:1,
+    padding:10,
+   }
 })
 
 export default MealDetailScreen;

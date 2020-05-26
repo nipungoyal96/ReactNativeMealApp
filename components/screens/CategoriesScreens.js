@@ -1,27 +1,40 @@
 import React from 'react';
-import {View,Text,StyleSheet,Button} from 'react-native';
+import {FlatList} from 'react-native';
+import {HeaderButtons,Item} from 'react-navigation-header-buttons';
+import HeaderButton from '../HeaderButton';
+import { Categories } from "../../data/dummyData";
 
+import CategoryGridTile from '../CategoryGridTitle';
 
 const CategoriesScreens = props =>{
-    console.log(props);
+    const renderGridItem = (itemData) =>{
+        return(
+           <CategoryGridTile title={itemData.item.title}
+           color={itemData.item.color} onSelect={()=>
+            props.navigation.navigate({
+                routeName:'CategoryMeals',params:{
+                    categoryId: itemData.item.id
+                }
+            })
+           }/>
+        )
+    }
+    
     return(
-        <View style={styles.screen}>
-            <Text>
-                The Categories  Screen!
-            </Text>
-            <Button title="Go To Meals" onPress={()=>{
-                props.navigation.push({routeName: 'CategoryMeals'})
-            }}/>
-        </View>
+        <FlatList data={Categories} renderItem={renderGridItem} numColumns={2}/>
     )
 }
 
-const styles = StyleSheet.create({
-    screen:{
-        flex:1,
-        justifyContent:'center',
-        alignItems:'center'
-    }
-})
+CategoriesScreens.navigationOptions= navData=>{
+    return{
+    headerTitle:'Meal Categories',
+    headerLeft: <HeaderButtons HeaderButtonComponent={HeaderButton}>
+        <Item title="Menu" iconName='ios-menu' onPress={()=> {
+            navData.navigation.toggleDrawer();
+        }}/>
+    </HeaderButtons>}
+};
+
+
 
 export default CategoriesScreens;
